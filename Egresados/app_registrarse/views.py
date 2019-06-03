@@ -1,5 +1,3 @@
-from django.shortcuts import render
-
 # Create your views here.
 
 from django.shortcuts import render, redirect ##redirect sirve para redireccionar paginas
@@ -7,8 +5,8 @@ from .forms import RegistroForm
 from django.core.mail import EmailMessage
 from django.urls import reverse
 from  .models import Registrarse
-from django.utils.timezone import now
 from datetime import datetime
+import hashlib
 
 # Create your views here.
 def registrarse(request):
@@ -34,10 +32,11 @@ def registrarse(request):
             email= request.POST.get('email')
             genero=request.POST.get('genero')
             contraseña=request.POST.get('contraseña')
+            contraseña_cifrada= hashlib.sha1(contraseña.encode()).hexdigest()
             activacion=False
             #content= request.POST.get('content','')
             #Enviamos el correo y redireccionamos
-            obj = Registrarse.objects.create(nombres=nombres, apellidos=apellidos, pais=pais, fecha_nacimiento=date, genero=genero,email=email, contraseña= contraseña, activacion= activacion)
+            obj = Registrarse.objects.create(nombres=nombres, apellidos=apellidos, pais=pais, fecha_nacimiento=date, genero=genero,email=email, contraseña= contraseña_cifrada, activacion= activacion)
             """email = EmailMessage(
                'La caffetiera: Nuevo mensaje de contacto', #este es el asunto
                'De {} <{}>\n\nEscribio:\n\n{}'.format(name,email, content), #este es el cuerpo del mensaje
