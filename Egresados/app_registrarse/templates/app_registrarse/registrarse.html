@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     {% load static %}
     <link rel="stylesheet" type="text/css" href="{% static 'app_registrarse/css/registrarse.css' %}">
+    <script src='https://www.google.com/recaptcha/api.js'></script>
 </head>
 
 {% load static %}
@@ -22,6 +23,7 @@
                     <label for="username">Nombre:</label>
                     {{form.nombres}}
                 </div>
+                {{form.nombres.errors}}
                 <div class="form-group">
                     <label for="apellidos">Apellidos:</label>
                     {{form.apellidos}}
@@ -46,9 +48,12 @@
                   <label for="contraseña">Contraseña:</label>
                   {{form.contraseña}}
                 </div>
+                <!--<div class="g-recaptcha" data-sitekey="6LdaUqcUAAAAAOK3xzjo-oknTM33fbXExlcwFG0z"></div>-->
+                {{form.captcha}}
                 <div class="form-group">
                     <button type="submit" class="btn btn-success btn-lg">Enviar</button>
                 </div>
+
             </form>
         </div>
     </div>

@@ -31,6 +31,9 @@ class Registrarse (models.Model):
     contraseña = models.CharField(verbose_name="Contraseña",default='',null= False, blank= False, max_length=50) #campo opcional
     activacion = models.BooleanField(verbose_name="activacion",default=False, null= False, blank= False) #campo opcional
 
+    def activate(self):
+        return self.activacion
+
     class Meta:
         verbose_name = 'Egresado'
         verbose_name_plural= 'Egresados'

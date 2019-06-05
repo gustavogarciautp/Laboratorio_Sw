@@ -6,6 +6,7 @@ from django.core.mail import EmailMessage
 from django.urls import reverse
 #from  .models import Registrarse
 import hashlib
+from app_registrarse.models import Registrarse
 
 # Create your views here.
 def login(request):
@@ -18,19 +19,8 @@ def login(request):
             contraseña=request.POST.get('contraseña')
             contraseña_cifrada= hashlib.sha1(contraseña.encode()).hexdigest()
 
-            obj = Registrarse.objects.create(nombres=nombres, apellidos=apellidos, pais=pais, fecha_nacimiento=date, genero=genero,email=email, contraseña= contraseña_cifrada, activacion= activacion)
-            """email = EmailMessage(
-               'La caffetiera: Nuevo mensaje de contacto', #este es el asunto
-               'De {} <{}>\n\nEscribio:\n\n{}'.format(name,email, content), #este es el cuerpo del mensaje
-                'no-contestar@inbox.mailtrap.io', #email de origen
-                ['gustavito_98153@hotmail.com'],#email_destino
-                reply_to=[email] #este es el email donde va a responder la persona que recibe el correo
-            )
-            try:
-                email.send() #enviamos el mensaje
-                #Todo ha ido bien, redireccionamos a ok
-                return redirect(reverse('contact')+'?ok')
-            except:
-                #Algo no ha ido bien, redireccionamos a fail
-                return redirect(reverse('contact')+'?fail') #reverse('contact') es como si fuera un tag url"""
+            obj=Registrarse.objects.get(email=email, contraseña=contraseña_cifrada)
+            if not obj.activate():
+                return redirect(reverse('login')+'?fail') #reverse('contact') es como si fuera un tag url"""
+
     return render(request, "app_core/login.html", {'form':login_form})

@@ -7,6 +7,12 @@ from django.urls import reverse
 from  .models import Registrarse
 from datetime import datetime
 import hashlib
+import requests
+import urllib
+import json
+from django.conf import settings
+from django.contrib import messages
+
 
 # Create your views here.
 def registrarse(request):
@@ -16,6 +22,7 @@ def registrarse(request):
         registro_form = RegistroForm(data= request.POST) #request.POST contiene los campos que hemos rellenado en el formulario
         if registro_form.is_valid():  #verifica que todos los campos esten rellenados correctamente
             nombres= request.POST.get('nombres')  #request es un diccionario por eso utilizamos get para obtener los valores
+
             apellidos = request.POST.get('apellidos')
             pais = request.POST.get('pais')
 
@@ -36,7 +43,6 @@ def registrarse(request):
             activacion=False
             #content= request.POST.get('content','')
             #Enviamos el correo y redireccionamos
-            obj = Registrarse.objects.create(nombres=nombres, apellidos=apellidos, pais=pais, fecha_nacimiento=date, genero=genero,email=email, contraseña= contraseña_cifrada, activacion= activacion)
             """email = EmailMessage(
                'La caffetiera: Nuevo mensaje de contacto', #este es el asunto
                'De {} <{}>\n\nEscribio:\n\n{}'.format(name,email, content), #este es el cuerpo del mensaje
@@ -51,4 +57,35 @@ def registrarse(request):
             except:
                 #Algo no ha ido bien, redireccionamos a fail
                 return redirect(reverse('contact')+'?fail') #reverse('contact') es como si fuera un tag url"""
+    
+            recaptcha_response = request.POST.get('captcha')
+            url = 'https://www.google.com/recaptcha/api/siteverify'
+            values = {
+                'secret': settings.RECAPTCHA_PRIVATE_KEY,
+                'response': recaptcha_response
+            }
+            verificar = requests.get(url, values)
+            verificar = verificar.json()
+            print(verificar)
+            response = verificar.get("success",False)
+
+            """
+            print("SUCCESS 1")
+            req =  urllib.request.Request(url, data=data)
+            print(req)
+            response = urllib.request.urlopen(req)
+            print("SUCCESS 3")
+            result = json.loads(response.read().decode())
+            ''' End reCAPTCHA validation '''
+            print(result)"""
+            if result['success']:
+                form.save()
+                obj = Registrarse.objects.create(nombres=nombres, apellidos=apellidos, pais=pais, fecha_nacimiento=date, genero=genero,email=email, contraseña= contraseña_cifrada, activacion= activacion)
+                print("SUCCESS")
+                messages.success(request, 'Registrado con exito')
+            else:
+                messages.error(request, 'CAPTCHA invalido. Por favor intentalo de nuevo.')
+
+            return redirect('registrarse')
+
     return render(request, "app_registrarse/registrarse.html", {'form':registro_form})

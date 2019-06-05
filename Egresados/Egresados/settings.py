@@ -21,6 +21,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'n=g1vfl8m54(awna+=n8yb$$-xldekb4)_$d=(1*p+dcb8&m&='
+RECAPTCHA_PUBLIC_KEY = '6LdaUqcUAAAAAOK3xzjo-oknTM33fbXExlcwFG0z'
+RECAPTCHA_PRIVATE_KEY = '6LdaUqcUAAAAANtBkskWrDSPz2SezQT_i3jsSRon'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -38,7 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'app_core',
-    'app_registrarse',    
+    'app_registrarse.apps.AppRegistrarseConfig',   
+    'captcha',
 ]
 
 MIDDLEWARE = [
