@@ -48,7 +48,9 @@
 
 				</form>
 				{% if 'fail' in request.GET %}
-              	<p><b>Egresado aun no ha sido activado</b></p>
+              	<p><b>La cuenta no ha sido activada</b></p>
+              	{% elif 'nofound' in request.GET %}
+              	<p><b>Email y contraseña no coinciden</b></p>
             {% endif %}
 			</div>
 			<div class="card-footer">
@@ -56,7 +58,7 @@
 					¿No tienes una cuenta?<a href="{% url 'registrarse' %}">Registrarse</a>
 				</div>
 				<div class="d-flex justify-content-center">
-					<a href="#">¿Olvidaste tu contraseña?</a>
+					<a href="{% url 'recuperar_1' %}">¿Olvidaste tu contraseña?</a>
 				</div>
 			</div>
 		</div>

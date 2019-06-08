@@ -14,15 +14,24 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 
 from app_core import views as app_core_views  #importamos de nuestra app core el fichero views
 from app_registrarse import views as app_registrarse_views
 from django.conf import settings
 
 urlpatterns = [
-	path('', app_core_views.login, name='login'), #Cuando se encuentra en esta url se llama al metodo home
+	path('login/', app_core_views.login, kwargs= {'vista': 'egresado'}, name='login'),
+    path('ad-min/', app_core_views.login, kwargs= {'vista': 'administradpr'},name='admin'),
 	path('registrarse/', app_registrarse_views.registrarse, name='registrarse'),
-    path('admin/', admin.site.urls),
+    path('recuperar_1/', app_core_views.recuperar_1, name='recuperar_1'),
+    path('recuperar_2/', include('app_core.urls')),
+    path('principal/', app_core_views.principal, name='principal'),
+    #path('recuperar_2', app_core_views.recuperar_2, name='recuperar_2'),
+    path('super-user/', admin.site.urls),
+    path('perfil/', app_registrarse_views.ProfileUpdate.as_view(), name='perfil')
 ]
 
+if settings.DEBUG:
+    from django.conf.urls.static import static
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

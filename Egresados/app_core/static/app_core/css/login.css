@@ -3,9 +3,10 @@
 @import url('https://fonts.googleapis.com/css?family=Numans');
 
 html,body{
-background-image: url('https://www.sevenforums.com/attachments/general-discussion/250721d1486599828t-any-ideas-how-my-login-background-screen-changed-its-own-backgrounddefault.jpg');
+background-image: url(../img/fondo.jpg);
 background-size: cover;
 background-repeat: no-repeat;
+background-attachment: fixed;
 height: 100%;
 font-family: 'Numans', sans-serif;
 }

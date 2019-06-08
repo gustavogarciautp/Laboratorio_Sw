@@ -2,22 +2,39 @@
 
 from django.shortcuts import render, redirect ##redirect sirve para redireccionar paginas
 from .forms import RegistroForm
+from .models import Perfil
 from django.core.mail import EmailMessage
 from django.urls import reverse
-from  .models import Registrarse
+from  app_core.models import Egresado, Interes
 from datetime import datetime
 import hashlib
 import requests
 import urllib
 import json
+from django import forms
 from django.conf import settings
 from django.contrib import messages
+from django.views.generic import CreateView
+from django.views.generic.edit import UpdateView
+from django .urls import reverse_lazy
+from django.forms.widgets import CheckboxSelectMultiple
 
+def update():
+    obj= Interes.objects.all()
+    INTERESES=[]
+    for interes in obj:
+        INTERESES.append([interes.nombre,interes.nombre])
+    return INTERESES
 
-# Create your views here.
 def registrarse(request):
-    #print("Tipo de petición: {}".format(request.method))  #method nos indica el metodo con el que se ha hecho la peticion
     registro_form = RegistroForm() #Hacemos la instancia del formulario
+    INTERESES=update()
+    registro_form.fields['interes_']= forms.MultipleChoiceField(
+							            required=True,
+							            label='Interes',
+							            widget=CheckboxSelectMultiple(),
+							            choices=INTERESES)
+    #print(registro_form.nombres)
     if request.method == 'POST': #verificamos se el formulario se ha enviado por POST
         registro_form = RegistroForm(data= request.POST) #request.POST contiene los campos que hemos rellenado en el formulario
         if registro_form.is_valid():  #verifica que todos los campos esten rellenados correctamente
@@ -41,51 +58,32 @@ def registrarse(request):
             contraseña=request.POST.get('contraseña')
             contraseña_cifrada= hashlib.sha1(contraseña.encode()).hexdigest()
             activacion=False
-            #content= request.POST.get('content','')
-            #Enviamos el correo y redireccionamos
-            """email = EmailMessage(
-               'La caffetiera: Nuevo mensaje de contacto', #este es el asunto
-               'De {} <{}>\n\nEscribio:\n\n{}'.format(name,email, content), #este es el cuerpo del mensaje
-                'no-contestar@inbox.mailtrap.io', #email de origen
-                ['gustavito_98153@hotmail.com'],#email_destino
-                reply_to=[email] #este es el email donde va a responder la persona que recibe el correo
-            )
-            try:
-                email.send() #enviamos el mensaje
-                #Todo ha ido bien, redireccionamos a ok
-                return redirect(reverse('contact')+'?ok')
-            except:
-                #Algo no ha ido bien, redireccionamos a fail
-                return redirect(reverse('contact')+'?fail') #reverse('contact') es como si fuera un tag url"""
-    
-            recaptcha_response = request.POST.get('captcha')
-            url = 'https://www.google.com/recaptcha/api/siteverify'
-            values = {
-                'secret': settings.RECAPTCHA_PRIVATE_KEY,
-                'response': recaptcha_response
-            }
-            verificar = requests.get(url, values)
-            verificar = verificar.json()
-            print(verificar)
-            response = verificar.get("success",False)
 
-            """
-            print("SUCCESS 1")
-            req =  urllib.request.Request(url, data=data)
-            print(req)
-            response = urllib.request.urlopen(req)
-            print("SUCCESS 3")
-            result = json.loads(response.read().decode())
-            ''' End reCAPTCHA validation '''
-            print(result)"""
-            if result['success']:
-                form.save()
-                obj = Registrarse.objects.create(nombres=nombres, apellidos=apellidos, pais=pais, fecha_nacimiento=date, genero=genero,email=email, contraseña= contraseña_cifrada, activacion= activacion)
-                print("SUCCESS")
-                messages.success(request, 'Registrado con exito')
-            else:
-                messages.error(request, 'CAPTCHA invalido. Por favor intentalo de nuevo.')
+            myDict = request.POST.dict()
+            print(type(myDict))
+            #print(myDict)
+            words=(request.POST.getlist('interes_'))
+            print(words)
+            print(request.POST.get('interes_'[0]))
+            print(request.POST.get('interes_'[1]))
 
-            return redirect('registrarse')
 
-    return render(request, "app_registrarse/registrarse.html", {'form':registro_form})
+            obj = Egresado.objects.create(nombres=nombres, apellidos=apellidos, pais=pais, fecha_nacimiento=date, genero=genero,email=email, contraseña= contraseña_cifrada, activacion= activacion)
+
+            return redirect(reverse('login'))
+
+
+    return render(request, "app_registrarse/registrarse.html", {'form': registro_form})
+
+
+
+class ProfileUpdate(UpdateView):
+	model = Perfil
+	fields = ['avatar', 'bio', 'link']
+	success_url = reverse_lazy('perfil')
+	template_name= 'app_registarse/perfil_form.html'
+
+	def get_object(self):
+		#recuperar el objeto que se va a editar
+		perfil, creado= Perfil.objects.get_or_create(user=self.request.user)
+		return perfil
