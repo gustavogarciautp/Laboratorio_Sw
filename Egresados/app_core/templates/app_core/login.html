@@ -51,8 +51,11 @@
               	<p><b>La cuenta no ha sido activada</b></p>
               	{% elif 'nofound' in request.GET %}
               	<p><b>Email y contraseña no coinciden</b></p>
+              	{% elif 'registrado' in request.GET %}
+              	<p><b>Se ha registrado exitosamente.</b></p>
             {% endif %}
 			</div>
+			{% if url == "login_" or url == "admin_" %}
 			<div class="card-footer">
 				<div class="d-flex justify-content-center links">
 					¿No tienes una cuenta?<a href="{% url 'registrarse' %}">Registrarse</a>
@@ -61,6 +64,7 @@
 					<a href="{% url 'recuperar_1' %}">¿Olvidaste tu contraseña?</a>
 				</div>
 			</div>
+			{% endif %}
 		</div>
 	</div>
 </div>

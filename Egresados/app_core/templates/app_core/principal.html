@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
 
@@ -25,11 +25,12 @@
 
     <!-- Sidebar -->
     <div class="bg-light border-right" id="sidebar-wrapper">
-      <div class="sidebar-heading">Start Bootstrap </div>
+      <div class="sidebar-heading">{{request.user.email}}</div>
       <div class="list-group list-group-flush">
         <a href="#" class="list-group-item list-group-item-action bg-light">Contenido</a>
         <a href="#" class="list-group-item list-group-item-action bg-light">Circulo de amigos</a>
-        <a href="#" class="list-group-item list-group-item-action bg-light">Buscar amigos</a>
+        <a href="{% url 'profiles:list' %}" class="list-group-item list-group-item-action bg-light">Buscar amigos</a>
+        <a href="{% url 'messenger:list' %}" class="list-group-item list-group-item-action bg-light">Mensajes</a>
         <a href="{% url 'perfil' %}" class="list-group-item list-group-item-action bg-light">Perfil</a>
       </div>
     </div>
@@ -52,25 +53,27 @@
             </li>
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                Dropdown
+                Opciones
               </a>
               <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
                 <a class="dropdown-item" href="#">Configuración de cuenta</a>
                 <div class="dropdown-divider"></div>
-                <a class="dropdown-item" href="#">Cerrar sesión</a>
+                <a class="dropdown-item" href="{% url 'logout' %}">Cerrar sesión</a>
               </div>
             </li>
           </ul>
         </div>
       </nav>
 
-      <div class="container-fluid">
+      <!--<div class="container-fluid">
         <h1 class="mt-4">Simple Sidebar</h1>
         <p>The starting state of the menu will appear collapsed on smaller screens, and will appear non-collapsed on larger screens. When toggled using the button below, the menu will change.</p>
         <p>Make sure to keep all page content within the <code>#page-content-wrapper</code>. The top navbar is optional, and just for demonstration. Just create an element with the <code>#menu-toggle</code> ID which will toggle the menu when clicked.</p>
       </div>
     </div>
-    <!-- /#page-content-wrapper -->
+    <-- /#page-content-wrapper -->
+
+    {% block content %}{% endblock %}
 
   </div>
   <!-- /#wrapper -->

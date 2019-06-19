@@ -1,39 +1,73 @@
-from django.shortcuts import render, get_object_or_404
-
-from django.shortcuts import render, redirect ##redirect sirve para redireccionar paginas
+from django.shortcuts import render, get_object_or_404, redirect
 from .forms import LoginForm, Recuperar1Form, Recuperar2Form
-from django.core.mail import EmailMessage
-from django.urls import reverse
-#from  .models import Registrarse
 import hashlib
-import random
-from .models import Administrador, Egresado, SuperUser
+from .models import Administrador, Egresado, User, SuperUser
+from django.core.mail import EmailMultiAlternatives
+from django.urls import reverse, resolve 
+from django.contrib.auth import authenticate, logout
+from django.contrib.auth import login as loginB
+from django.shortcuts import HttpResponseRedirect
+from .models import Paises, Ciudades
 
 # Create your views here.
-def login(request, vista):
-    #print("Tipo de petición: {}".format(request.method))  #method nos indica el metodo con el que se ha hecho la peticion
-    login_form = LoginForm() #Hacemos la instancia del formulario
-    if request.method == 'POST': #verificamos se el formulario se ha enviado por POST
-        login_form = LoginForm(data= request.POST) #request.POST contiene los campos que hemos rellenado en el formulario
-        if login_form.is_valid():  #verifica que todos los campos esten rellenados correctamente
-            email= request.POST.get('email')
-            contraseña=request.POST.get('contraseña')
-            contraseña_cifrada= hashlib.sha1(contraseña.encode()).hexdigest()
-            try:
-                if vista=='egresado':
-                    obj=Egresado.objects.get(email=email, contraseña=contraseña_cifrada)
-                elif vista =='administrador':
-                    obj= Administrador.objects.get(email=email, contraseña=contraseña_cifrada)
-                if obj:
-                    if not obj.activate():
-                        return redirect(reverse('login')+'?fail') #reverse('contact') es como si fuera un tag url"""
-                    else:
-                        return redirect(reverse('principal'))
-            except:
-                return redirect(reverse('login')+'?nofound')
+def login(request):
+    print(request.user.is_authenticated)
+    current_url= resolve(request.path_info).url_name
+
+    if not request.user.is_authenticated:
+        login_form = LoginForm() 
+        if request.method == 'POST': 
+            login_form = LoginForm(data= request.POST) 
+            if login_form.is_valid():  
+                email= request.POST.get('email')
+                password=request.POST.get('contraseña')
+                #current_url= resolve(request.path_info).url_name
+                try:
+                    if current_url=='login_':
+                        password_cifrada= hashlib.sha1(password.encode()).hexdigest()
+                        user = authenticate(request, email=email, password=password_cifrada)    
+                        print("fgfg")
+                        print(user)
+                        if user:
+                            if not user.activate():
+                                return redirect(reverse('login_')+'?fail') 
+                            else:
+                                loginB(request, user, 'app_core.backends.EgresadoBackend')
+                                return redirect(reverse('principal'))
+                        else:
+                            return redirect(reverse('login_')+'?nofound')
+                    elif current_url=='admin_':
+                        print("kkkkkkkk")
+                        user = authenticate(request, email=email, password=password)
+                        print(user)
+                        loginB(request, user, 'app_core.backends.AdminBackend')
+                        return redirect(reverse('admin_site:index')) 
+                    elif current_url=='super':
+                        user = authenticate(request, email=email, password=password)
+                        print("********")
+                        print(user)
+                        loginB(request, user, 'app_core.backends.SuperUserBackend')       
+                        return redirect(reverse('admin:index'))              
+                except:
+                    if current_url=='login_':
+                        return redirect(reverse('login_')+'?nofound')
+                    elif current_url=='admin_':
+                        return redirect(reverse('admin_')+'?nofound')
+                    elif current_url=='super':
+                        return redirect(reverse('super')+'?nofound')
+        return render(request, "app_core/login.html", {'form':login_form, 'url':current_url})
+    else:
+        if current_url=='admin_' and request.user.is_administrador:
+            return redirect(reverse('admin_site:index')) 
+        if current_url=='login_' and request.user.is_egresado:
+            return redirect(reverse('principal'))
+        if current_url=='super' and request.user.is_superusuario:
+            return redirect(reverse('admin:index'))
+        return redirect(reverse('404'))
 
 
-    return render(request, "app_core/login.html", {'form':login_form})
+def page404(request):
+    return render(request, "app_core/404.html")
 
 
 def recuperar_1(request):
@@ -42,42 +76,41 @@ def recuperar_1(request):
         recuperar1_form = Recuperar1Form(data= request.POST) #request.POST contiene los campos que hemos rellenado en el formulario
         if recuperar1_form.is_valid():  #verifica que todos los campos esten rellenados correctamente
             email= request.POST.get('email')
-            obj=Registrarse.objects.get(email=email)
+            obj=Egresado.objects.filter(email=email)
             if obj:
-                asunto= 'Restablece tu contraseña'
+                asunto= 'Restablece tu password'
                 #clave= random.randint(1000,100000)
                 clave_cifrada= hashlib.sha1(str(obj.id).encode()).hexdigest()
-                content= '''
-                Alguien (espero que usted) haya solicitado un restablecimiento de contraseña para su cuenta del Sistema de Egresados. Siga el enlace de abajo para establecer una nueva contraseña:
-                http://127.0.0.1:8000/recuperar_2/'''+str(clave_cifrada)+\
-                '''
-                 Si no desea restablecer su contraseña, ignore este correo electrónico y no se tomará ninguna medida.'''
-                email = EmailMessage(
-                    asunto,
-                    content,
-                    to= [email]#['gustavito_9813@hotmail.com']
-                )
-                email.send() #enviamos el mensaje
+                link='http://127.0.0.1:8000/recuperar_2/'+str(clave_cifrada)
+
+                html_content='<p>Ha recibido este correo electrónico porque ha solicitado restablecer la password para su cuenta en <a href="http://127.0.0.1:8000">http://127.0.0.1:8000</a></p></br><p>Por favor vaya a la pagina siguiente y escoja una nueva password.</p></br><a href="http://127.0.0.1:8000/recuperar_2/'+str(clave_cifrada)+'">Recuperar password</a></br><p>Su nombre de usuario en caso de haberlo olvidado.</p></br><p>¡Gracias por usar nuestro sitio!</p></br>El equipo de <a href=" http://127.0.0.1:8000">Observatorio Egresados</a>'
+                msg = EmailMultiAlternatives(asunto, content, to=[email])
+                msg.attach_alternative(html_content, "text/html")
+                msg.send()
+
+                #email.send() #enviamos el mensaje
 
                 obj.id_restablecimiento=clave_cifrada
                 obj.save()
+            else:
+                return redirect(reverse('recuperar_1')+'?nofound')
 
 
     return render(request, "app_core/recuperar_pass_1.html", {'form':recuperar1_form})
 
 
 def recuperar_2(request, id_recuperacion):
-    page= get_object_or_404(Registrarse, id_restablecimiento=id_recuperacion)
+    page= get_object_or_404(Egresado, id_restablecimiento=id_recuperacion)
     id_recuperacion=''
     recuperar2_form = Recuperar2Form() #Hacemos la instancia del formulario
     if request.method == 'POST': #verificamos se el formulario se ha enviado por POST
         recuperar2_form = Recuperar2Form(data= request.POST) #request.POST contiene los campos que hemos rellenado en el formulario
         if recuperar2_form.is_valid():  #verifica que todos los campos esten rellenados correctamente
-            contraseña= request.POST.get('contraseña')
-            confirmar_contraseña = request.POST.get('confirmar_contraseña')
-            if contraseña==confirmar_contraseña:
+            password= request.POST.get('password')
+            confirmar_password = request.POST.get('confirmar_password')
+            if password==confirmar_password:
                 page.id_restablecimiento=''
-                page.contraseña= hashlib.sha1(contraseña.encode()).hexdigest()
+                page.password= hashlib.sha1(password.encode()).hexdigest()
                 page.save()
             else:
                 return redirect(reverse('recuperar_2')+'?nomatch')
@@ -87,4 +120,10 @@ def recuperar_2(request, id_recuperacion):
 
 
 def principal(request):
-    return render(request, "app_core/principal.html")
+    if request.user.is_authenticated and request.user.is_egresado:
+        return render(request, "app_core/principal.html")
+    else:
+        return render(request, "app_core/404.html")
+
+def home(request):
+    return render(request, "app_core/page_home.html")
